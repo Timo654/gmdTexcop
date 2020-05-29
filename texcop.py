@@ -34,7 +34,7 @@ jo+QF5GS5pMAlOeVlpeY6Jmam5ydnunqnwCgoaKjpKWmp+uoqarsq6ytAK7tr+7vsPCxsrPxtLUY
 trcAuLm6u7y9vr/AwfLCGcPExTx5cuZgl3DGAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIwLTA1LTI5
 VDAzOjI1OjE5LTA3OjAwKmL18wAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMC0wNS0yOVQwMzoyNTox
 OS0wNzowMFs/TU8AAAAASUVORK5CYII=""" 
-
+#gmd texture list and texture amount offset
 OFFSET = {
     'gmd': (0x70, 0x74),
 }
@@ -48,14 +48,14 @@ def resource_path(relative_path): #related to changing tkinter icon
 
 def get_textures(filename): #gets textures from gmd
     ENDIANNESS = 'big'
-    t_o, n_o = OFFSET[filename[-3:]]
+    t_o, n_o = OFFSET[filename[-3:]] #texture list offset and texture amount offset
     textures = []
     with open(filename, 'rb') as binary_file:
         binary_data = binary_file.read()
     c_endianness = ENDIANNESS
     endian_check = int.from_bytes(binary_data[0x04:0x06], ENDIANNESS)
     #If endianness check is 8448 (Dragon Engine) or 0 (Kenzan), it's little endian.
-    if endian_check == 8448 or 0:
+    if endian_check in [8448, 0]:
         c_endianness = 'little'
     textures_offset = int.from_bytes(binary_data[t_o:t_o+4], c_endianness)
     n_textures = int.from_bytes(binary_data[n_o:n_o+4], c_endianness)
@@ -66,54 +66,54 @@ def get_textures(filename): #gets textures from gmd
         textures_offset += 0x20
     return textures
 #copies textures to folder
-def copy_textures(n_textures, texpath, textures, output):
+def copy_textures(n_textures, tex_path, textures, output):
     for p in range (0, n_textures):
-        original = texpath + "/" + textures[p] + ".dds"
+        original = tex_path + "/" + textures[p] + ".dds"
         if os.path.exists(original):
             shutil.copy(original, output)
         else:
             print("Failed to find a texture.")    
             continue
 #saves settings
-def save(model, texpath, output, stfile):
-        settings = [model, texpath, output]
-        with open(stfile, 'w') as f:
+def save(model, tex_path, output, settings_file):
+        settings = [model, tex_path, output]
+        with open(settings_file, 'w') as f:
             f.write(json.dumps(settings))
-#does stuff
-def dostuff(n_models, modelpath, texpath, output, stfile):
+#saves model texture list and gets info to copy textures 
+def main(n_models, model_path, tex_path, output, settings_file):
     for o in range (0, n_models):
-        mp1, mp2 = os.path.split(modelpath[o])
-        textures = list(get_textures(modelpath[o]))
-        output2 = os.path.join(output, mp2[:-4])
-        name = output + "/" + mp2[:-4] + "-textures.txt"
+        modelfolder, modelname = os.path.split(model_path[o])
+        textures = list(get_textures(model_path[o]))
+        output_model = os.path.join(output, modelname[:-4]) #gets path to save model to a separate folder
+        name = output + "/" + modelname[:-4] + "-textures.txt"
         print("Saving texture list to " + name)
-        if not os.path.exists(output2):
-            os.makedirs(output2)
+        if not os.path.exists(output_model):
+            os.makedirs(output_model)
         with open(name, 'w') as f:
             for texture in textures:
                 f.write(texture + '\n')
-        copy_textures(len(textures), texpath, textures, output2)
-    save(mp1, texpath, output, stfile)
+        copy_textures(len(textures), tex_path, textures, output_model)
+    save(modelfolder, tex_path, output, settings_file)
 #picking texture/output paths
-def findpath(): #paths
-    global texpath
+def find_path(): #paths
+    global tex_path
     global output
-    texpath = filedialog.askdirectory(initialdir=settings[1],title = "Select the DDS folder")
-    if texpath == "":
+    tex_path = filedialog.askdirectory(initialdir=settings[1],title = "Select the DDS folder")
+    if tex_path == "":
         quit()
     output = filedialog.askdirectory(initialdir=settings[2],title = "Select the output folder")
     if output == "":
         quit()
 if os.name == 'nt':
-    stfol = os.path.join(os.getenv('LOCALAPPDATA'), 'Texcop') #settings folder
-else: stfol = os.path.join(os.environ['HOME'], '.config', 'Texcop')
-stfile = os.path.join(stfol, 'settings.txt') #settings file
+    settings_folder = os.path.join(os.getenv('LOCALAPPDATA'), 'Texcop') #settings folder
+else: settings_folder = os.path.join(os.environ['HOME'], '.config', 'Texcop') 
+settings_file = os.path.join(settings_folder, 'settings.txt') #settings file
 #making a settings file
-if not os.path.exists(stfol):
-    os.makedirs(stfol)
+if not os.path.exists(settings_folder):
+    os.makedirs(settings_folder)
 settings = []
-if path.exists(stfile):
-    with open(stfile, 'r') as f:
+if path.exists(settings_file):
+    with open(settings_file, 'r') as f:
         settings = json.loads(f.read())
 else: settings = ['/', '/', '/']
 
@@ -125,22 +125,22 @@ root.withdraw()
 #selecting gmds
 models = [] 
 if len(sys.argv) == 1:
-    pickmodels = filedialog.askopenfilenames(initialdir=settings[0],title = "Select the Model",filetypes=(("Model files", "*.gmd"), ("All Files", "*.*")))
-    if pickmodels == "":
+    pick_models = filedialog.askopenfilenames(initialdir=settings[0],title = "Select the Model",filetypes=(("Model files", "*.gmd"), ("All Files", "*.*")))
+    if pick_models == "":
         quit()
-    models = list(pickmodels)
+    models = list(pick_models)
 else:        
     models = sys.argv[1:]
 #selecting paths for textures and output
-if os.path.exists(stfile):
+if os.path.exists(settings_file):
     MsgBox = tk.messagebox.askquestion ('Select paths','Do you want to load previously used paths?',icon = 'question')
     if MsgBox == 'yes':
-        texpath = settings[1]
+        tex_path = settings[1]
         output = settings[2]
     if MsgBox == 'no':
-        findpath()
+        find_path()
 else:
-    findpath()
+    find_path()
 #going through models and copying textures
-dostuff(len(models), models, texpath, output, stfile)
+main(len(models), models, tex_path, output, settings_file)
 input("Textures copied successfully.\nPress Enter to continue...")
