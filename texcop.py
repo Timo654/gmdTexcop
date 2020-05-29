@@ -82,10 +82,10 @@ def save(model, tex_path, output, settings_file):
 #saves model texture list and gets info to copy textures 
 def main(n_models, model_path, tex_path, output, settings_file):
     for o in range (0, n_models):
-        modelfolder, modelname = os.path.split(model_path[o])
+        model_folder, model_name = os.path.split(model_path[o])
         textures = list(get_textures(model_path[o]))
-        output_model = os.path.join(output, modelname[:-4]) #gets path to save model to a separate folder
-        name = output + "/" + modelname[:-4] + "-textures.txt"
+        output_model = os.path.join(output, model_name[:-4]) #gets path to save model to a separate folder
+        name = output + "/" + model_name[:-4] + "-textures.txt"
         print("Saving texture list to " + name)
         if not os.path.exists(output_model):
             os.makedirs(output_model)
@@ -93,7 +93,7 @@ def main(n_models, model_path, tex_path, output, settings_file):
             for texture in textures:
                 f.write(texture + '\n')
         copy_textures(len(textures), tex_path, textures, output_model)
-    save(modelfolder, tex_path, output, settings_file)
+    save(model_folder, tex_path, output, settings_file)
 #picking texture/output paths
 def find_path(): #paths
     global tex_path
