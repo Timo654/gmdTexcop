@@ -107,7 +107,7 @@ def find_path(): #paths
 if os.name == 'nt':
     settings_folder = os.path.join(os.getenv('LOCALAPPDATA'), 'Texcop') #settings folder
 else: settings_folder = os.path.join(os.environ['HOME'], '.config', 'Texcop') 
-settings_file = os.path.join(settings_folder, 'settings.txt') #settings file
+settings_file = os.path.join(settings_folder, 'settings.json') #settings file
 #making a settings file
 if not os.path.exists(settings_folder):
     os.makedirs(settings_folder)
