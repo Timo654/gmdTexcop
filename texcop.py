@@ -73,6 +73,9 @@ def copy_textures(n_textures, tex_path, textures, output):
                 if os.path.exists(original):
                     common_output = os.path.join(output, 'common')
                     shutil.copy(original, common_output)
+                else:
+                    print("Failed to find a texture.")    
+                    continue
         elif os.path.exists(original):
                 shutil.copy(original, output)
         else:
@@ -93,7 +96,7 @@ def main(n_models, model_path, tex_path, output, settings_file):
         print("Saving texture list to " + name)
         if not os.path.exists(output_model):
             os.makedirs(output_model)
-            if separate_common == True: 
+        if separate_common == True: 
                 os.makedirs(output_model + '\\common') #creates a folder for textures that are in common
         with open(name, 'w') as f:
             for texture in textures:
@@ -117,8 +120,12 @@ def separate_textures():
     global compare_tex
     ask_about_common = tk.messagebox.askquestion ('Common textures','Do you want to separate common textures?',icon = 'question')
     if ask_about_common == 'yes':
-        separate_common = True
         compare_tex = filedialog.askdirectory(initialdir=settings[3],title = "Select the DDS folder to compare it to to find common textures")
+        if compare_tex == tex_path:
+            print("You selected the same DDS folder twice, can't look for shared textures.")
+            separate_common = False
+        else:
+            separate_common = True
     else:
         separate_common = False
         compare_tex = settings[3]
@@ -158,9 +165,11 @@ if os.path.exists(settings_file):
         compare_tex = settings[3]
         ask_about_common = tk.messagebox.askquestion ('Common textures','Do you want to separate common textures?',icon = 'question')
         if ask_about_common == 'yes':
-            separate_common = True
-        else:
-            separate_common = False
+            if compare_tex == tex_path:
+                print("You selected the same DDS folder twice, can't look for shared textures.")
+                separate_common = False
+            else:
+                separate_common = True
     if MsgBox == 'no':
         find_path()
 else:
