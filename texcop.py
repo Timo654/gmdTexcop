@@ -68,15 +68,19 @@ def get_textures(filename): #gets textures from gmd
 #copies textures to folder
 def copy_textures(n_textures, tex_path, textures, output):
     for p in range (0, n_textures):
-        original = tex_path + "/" + textures[p] + ".dds"
-        if os.path.exists(original):
-            shutil.copy(original, output)
+        original = tex_path + '/' + textures[p] + '.dds'
+        if os.path.exists(compare_tex + '/' + textures[p] + '.dds') and separate_common == True:
+                if os.path.exists(original):
+                    common_output = os.path.join(output, 'common')
+                    shutil.copy(original, common_output)
+        elif os.path.exists(original):
+                shutil.copy(original, output)
         else:
             print("Failed to find a texture.")    
             continue
 #saves settings
 def save(model, tex_path, output, settings_file):
-        settings = [model, tex_path, output]
+        settings = [model, tex_path, output, compare_tex]
         with open(settings_file, 'w') as f:
             f.write(json.dumps(settings))
 #saves model texture list and gets info to copy textures 
@@ -89,6 +93,8 @@ def main(n_models, model_path, tex_path, output, settings_file):
         print("Saving texture list to " + name)
         if not os.path.exists(output_model):
             os.makedirs(output_model)
+            if separate_common == True: 
+                os.makedirs(output_model + '\\common') #creates a folder for textures that are in common
         with open(name, 'w') as f:
             for texture in textures:
                 f.write(texture + '\n')
@@ -104,6 +110,18 @@ def find_path(): #paths
     output = filedialog.askdirectory(initialdir=settings[2],title = "Select the output folder")
     if output == "":
         quit()
+    separate_textures()
+#asks for paths to separate the common textures to a separate folder
+def separate_textures():
+    global separate_common
+    global compare_tex
+    ask_about_common = tk.messagebox.askquestion ('Common textures','Do you want to separate common textures?',icon = 'question')
+    if ask_about_common == 'yes':
+        separate_common = True
+        compare_tex = filedialog.askdirectory(initialdir=settings[3],title = "Select the DDS folder to compare it to to find common textures")
+    else:
+        separate_common = False
+        compare_tex = settings[3]
 if os.name == 'nt':
     settings_folder = os.path.join(os.getenv('LOCALAPPDATA'), 'Texcop') #settings folder
 else: settings_folder = os.path.join(os.environ['HOME'], '.config', 'Texcop') 
@@ -115,7 +133,7 @@ settings = []
 if path.exists(settings_file):
     with open(settings_file, 'r') as f:
         settings = json.loads(f.read())
-else: settings = ['/', '/', '/']
+else: settings = ['/', '/', '/', '/']
 
 root = tk.Tk()
 #tkinter icon
@@ -137,6 +155,12 @@ if os.path.exists(settings_file):
     if MsgBox == 'yes':
         tex_path = settings[1]
         output = settings[2]
+        compare_tex = settings[3]
+        ask_about_common = tk.messagebox.askquestion ('Common textures','Do you want to separate common textures?',icon = 'question')
+        if ask_about_common == 'yes':
+            separate_common = True
+        else:
+            separate_common = False
     if MsgBox == 'no':
         find_path()
 else:
