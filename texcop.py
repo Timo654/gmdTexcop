@@ -170,6 +170,7 @@ if os.path.exists(settings_file):
                 separate_common = False
             else:
                 separate_common = True
+        else: separate_common = False
     if MsgBox == 'no':
         find_path()
 else:
