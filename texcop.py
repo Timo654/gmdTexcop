@@ -79,7 +79,8 @@ def copy_textures(n_textures, tex_path, textures, output):
         elif os.path.exists(original):
                 shutil.copy(original, output)
         else:
-            print("Failed to find a texture.")    
+            print("Failed to find a texture.")
+            print(textures[p])
             continue
 #saves settings
 def save(model, tex_path, output, settings_file):
